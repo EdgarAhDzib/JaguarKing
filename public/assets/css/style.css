@@ -1,0 +1,61 @@
+.unitGrid {
+	padding: 5%;
+	background-image: url('../images/cerrito_terrain.png');
+	background-size:100%;
+}
+
+.boardSquare:hover {
+	box-shadow: 1px 1px 1px 1px red;
+}
+
+.selected {
+	-webkit-filter: drop-shadow(1px 1px 0 yellow)
+		drop-shadow(-1px -1px 0 yellow);
+	filter: drop-shadow(1px 1px 0 yellow)
+		drop-shadow(-1px -1px 0 yellow);
+}
+
+.availableSquare {
+	box-shadow: 2px 2px 2px 2px green;
+}
+
+.spears img{
+     position:absolute;
+     z-index:50;
+     background-image: url('../images/cursors/spears.png');
+}
+/*Apply a hover value for this class to highlight the target square for movement*/
+/*Once this works, the img:hover will likely be redundant and removable*/
+
+img {
+	-webkit-filter: drop-shadow(1px 1px 0 black)
+		drop-shadow(-1px -1px 0 black);
+	filter: drop-shadow(1px 1px 0 black)
+		drop-shadow(-1px -1px 0 black);
+	position: relative;
+	bottom: 0;
+	vertical-align: bottom;
+}
+
+img:hover {
+	box-shadow: 1px 1px 2px red, 0 0 25px blue, 0 0 5px green;
+}
+
+/*
+.battleField {
+	background-color: powderblue;
+	float: left;
+}
+
+.infoPanel {
+	float: left;
+}
+
+.enemyLogo .enemyStats .spells .playerStats .playerLogo {
+	width: 20%;
+	height: 100%;
+	display: flex;
+	float: left;
+	flex-wrap: wrap;
+}
+*/
