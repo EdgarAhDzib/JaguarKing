@@ -1,77 +1,93 @@
 var React = require("react");
-var Enemy = require("../units/Enemy");
-var Ally = require("../units/Ally");
+import Enemy from "../units/Enemy";
+import Ally from "../units/Ally";
 
-var UnitInfo = React.createClass({
+//var UnitInfo = React.createClass({
 
-	ifPoison : function() {
+export default class UnitInfo extends React.Component{
+	constructor() {
+		super();
+	}
+
+	alive() {
+		if (this.props.getUnitInfo.totalHP > 0) {
+			return <span>{this.props.getUnitInfo.totalHP} life points<br/>
+				({this.props.getUnitInfo.no} / {this.props.getUnitInfo.initHP / this.props.getUnitInfo.hp} members)<br/></span>
+		} else {
+			return <span style={{color:'red'}}>Deceased<br/></span>
+		}
+	}
+	
+	ifPoison() {
 		if (this.props.getUnitInfo.poison === 1) {
 			return <span>Poisonous<br/></span>
 		} else {
 			return null
 		}
-	},
+	}
 
-	ifAction : function() {
+	ifAction() {
 		if (this.props.getUnitInfo.speed > 0) {
 			return <span>{this.props.getUnitInfo.speed} actions left<br/></span>
 		} else {
-			return <span>All actions spent til next turn<br/></span>
+			return <span>All actions spent<br/></span>
 		}
-	},
+	}
 
-	ifAir : function() {
+	ifAir() {
 		if (this.props.getUnitInfo.air === 1) {
 			return <span>Air Unit<br/></span>
 		} else {
 			return null
 		}
-	},
+	}
 
-	ifAmmo : function() {
+	ifAmmo() {
 		if (this.props.getUnitInfo.ammo > 0) {
 			return <span>{this.props.getUnitInfo.ammo} ammo left<br/></span>
 		} else {
 			return null
 		}
-	},
+	}
 
-	ifDay : function() {
+	ifDay() {
 		if (this.props.getUnitInfo.day === 1) {
 			return <span>Day Unit</span>
 		} else {
 			return <span>Night Unit</span>
 		}
-	},
+	}
 
-	ifMagic : function() {
+	ifMagic() {
 		if (this.props.getUnitInfo.magic > 0) {
 			return <span>{this.props.getUnitInfo.magic} magic bolts left<br/></span>
 		} else {
 			return null
 		}
-	},
+	}
 
-	ifRanged : function() {
+	ifRanged() {
 		if (this.props.getUnitInfo.ranged > 0) {
 			return <span>Ranged attack {this.props.getUnitInfo.ranged}<br/></span>
 		} else {
 			return null
 		}
-	},
+	}
 
-	ifSpells : function() {
+	ifSpells() {
 		if (this.props.getUnitInfo.spells > 0) {
 			return <span>{this.props.getUnitInfo.spells} spells<br/></span>
 		} else {
 			return null
 		}
-	},
+	}
 	
-	render: function() {
+	render() {
 		var stuff = this.props.getUnitInfo;
-
 		//console.log(stuff);
+		//src={"assets/images/" + [this.state.alive ? this.props.unitProps.image : 'miccatl.png']}
+		//console.log(this.props);
+
 		//Indicate whether unit is ally or enemy for condition
 		if (stuff !== "") {
 			return (
@@ -80,11 +96,11 @@ var UnitInfo = React.createClass({
 				<h3 style={{textAlign:'center'}}>{this.props.getUnitInfo.name}</h3>
 				<h3 style={{textAlign:'center'}}>{this.props.getUnitInfo.team}</h3>
 				<img src={"assets/images/" + this.props.getUnitInfo.image} width={150} height={150} className={"img-responsive"} /><br/>
-				<h5 style={{textAlign:'center'}}>{this.props.getUnitInfo.no} members<br/>
+				<h4 style={{textAlign:'center'}}>
 				{this.props.getUnitInfo.type}<br/>
 				Level {this.props.getUnitInfo.level}<br/>
 				{this.props.getUnitInfo.xp} experience<br/>
-				{this.props.getUnitInfo.hp} life points<br/>
+				{this.alive()}
 				Melee strength {this.props.getUnitInfo.melee}<br/>
 				{this.ifRanged()}
 				Defense {this.props.getUnitInfo.defense}<br/>
@@ -97,13 +113,11 @@ var UnitInfo = React.createClass({
 				Perception {this.props.getUnitInfo.percept}<br/>
 				{this.ifAir()}
 				{this.ifDay()}
-				</h5>
+				</h4>
 				</div>
 			)
 		} else {
 			return null;
 		}
 	}
-});
-
-module.exports = UnitInfo;
+};

@@ -1,12 +1,25 @@
 var React = require("react");
 var ReactDOM = require("react-dom");
-var PlayField = require("./components/board/PlayField");
+import PlayField from "./components/board/PlayField";
 
 import { Provider } from "react-redux"
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
 
 //import routes from '../config/routes'
 import store from "./store"
 
+ReactDOM.render(
+  <Provider store={store}>
+    <PlayField />
+  </Provider>,
+document.getElementById('app'));
+
+
+store.subscribe(() => {
+	console.log(store.getState());
+})
+
+/*
 var App = React.createClass({
 
 	render: function() {
@@ -19,3 +32,4 @@ var App = React.createClass({
 });
 
 ReactDOM.render(<App />, document.getElementById("app"));
+*/

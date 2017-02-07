@@ -1,38 +1,167 @@
+body {
+	background-image: url('../images/backgrounds/fejervary1.jpg');
+	/*background-size:100%;*/
+	z-index: -20;
+}
+
 .unitGrid {
 	padding: 5%;
-	background-image: url('../images/cerrito_terrain.png');
-	background-size:100%;
+	background-image: url('../images/backgrounds/cerrito_terrain.png');
+	/*background-size:100%;*/
+}
+
+.boardSquare {
+	position: relative;
 }
 
 .boardSquare:hover {
 	box-shadow: 1px 1px 1px 1px red;
 }
 
+.modal {
+	background: no-repeat url('../images/backgrounds/spellbook1.jpg');
+	/*background: no-repeat url('../images/spellbook1.jpg') 50% / 100%; */
+}
+
+.blood_panel {
+	background: no-repeat url('../images/backgrounds/blood_panel.jpg');
+}
+
+.death_panel {
+	background: no-repeat url('../images/backgrounds/death_panel.jpg');
+	color: white;
+}
+
+.life_panel {
+	background: no-repeat url('../images/backgrounds/life_panel.jpg');
+}
+
+.elemental_panel {
+	background: no-repeat url('../images/backgrounds/elemental_panel.jpg');
+}
+
+/*
+.bloodQuad {
+	background: no-repeat url('../images/backgrounds/blood_quad.jpg');
+}
+
+.deathQuad {
+	background: no-repeat url('../images/backgrounds/death_quad.jpg');
+}
+
+.lifeQuad {
+	background: no-repeat url('../images/backgrounds/life_quad.jpg');
+}
+
+.elementalQuad {
+	background: no-repeat url('../images/backgrounds/elemental_quad.jpg');
+}
+*/
+
+.modal img{
+    vertical-align: top;
+    /*width: 100%;*/
+    opacity: 0;
+}
+
+.bloodQuad img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.deathQuad img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.lifeQuad img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.elementalQuad img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.blood_panel img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.death_panel img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.life_panel img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+.elemental_panel img{
+    vertical-align: top;
+    width: 100%;
+    opacity: 0;
+}
+
+/*, .blood_panel, .death_panel, .life_panel, .elemental_panel */
+
 .selected {
 	-webkit-filter: drop-shadow(1px 1px 0 yellow)
 		drop-shadow(-1px -1px 0 yellow);
 	filter: drop-shadow(1px 1px 0 yellow)
 		drop-shadow(-1px -1px 0 yellow);
+	/* Test for CSS response: the bottom works, the top does not; */
+	box-shadow: 1px 1px 2px yellow, 0 0 25px yellow, 0 0 5px yellow;
 }
 
 .availableSquare {
 	box-shadow: 2px 2px 2px 2px green;
+	cursor: url('../images/cursors/footprint.png'), auto;
 }
 
-.spears img{
-     position:absolute;
-     z-index:50;
-     background-image: url('../images/cursors/spears.png');
+.spears {
+	cursor: url('../images/cursors/spears.png'), auto;
 }
-/*Apply a hover value for this class to highlight the target square for movement*/
-/*Once this works, the img:hover will likely be redundant and removable*/
 
-img {
+.muwieri {
+	cursor: url('../images/cursors/muwieri.png'), auto;
+}
+
+.macuahuitl {
+	cursor: url('../images/cursors/macuahuitl.png'), auto;
+}
+
+.life_magic {
+	cursor: url('../images/cursors/life_magic.png'), auto;
+}
+
+.death_magic {
+	cursor: url('../images/cursors/death_magic.png'), auto;
+}
+
+.blood_magic {
+	cursor: url('../images/cursors/blood_magic.png'), auto;
+}
+
+.nature_magic {
+	cursor: url('../images/cursors/nature_magic.png'), auto;
+}
+
+.allyUnit, .enemyUnit {
 	-webkit-filter: drop-shadow(1px 1px 0 black)
 		drop-shadow(-1px -1px 0 black);
 	filter: drop-shadow(1px 1px 0 black)
 		drop-shadow(-1px -1px 0 black);
-	position: relative;
+	position: absolute;
 	bottom: 0;
 	vertical-align: bottom;
 }

@@ -12,13 +12,13 @@ var allTeams = [];
 router.get('/randunit', (req, res) => {
 
 	//$or searches for units from All OR selected team
-	Unit.find({ $or:[ {'team': "All"}, {'team': "Huaxtec"}] }, (err, results) => {
+	Unit.find({ $or:[ {'team': "Common"}, {'team': "P'urhepecha"}] }, (err, results) => {
 		for (let i=0; i<results.length; i++) {
 			randunits.push(results[i]);
 		}
 	});
 
-	Unit.find({'team': "Huaxtec"}, (err, results) => {
+	Unit.find({'team': "P'urhepecha"}, (err, results) => {
 		for (let i=0; i<results.length; i++) {
 			randunits.push(results[i]);
 		}
