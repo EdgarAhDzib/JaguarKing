@@ -13,6 +13,7 @@ export default class Ally extends React.Component{
 			// occSquaresArray: [],
 			// selectedHighlight: false
 		};
+		this.waiting = false;
 		this.handleClick = this.handleClick.bind(this);
 	}
 
@@ -147,6 +148,12 @@ export default class Ally extends React.Component{
 		
 		this.props.assessAllyUnit(this.props.unitProps);
 
+		if (this.props.waitClicked && this.props.unitProps.speed > 0) {
+			this.waiting = true;
+		} else {
+			this.waiting = false;
+		}
+
 		/*
 		if (this.props.allyTargetId === this.props.unitProps.id) {
 			console.log("This is a match in Ally", this.props.allyTargetId);
@@ -156,14 +163,20 @@ export default class Ally extends React.Component{
 		}
 		*/
 
-		if (this.props.unitProps.totalHP > 0 && this.props.allyTargetId === this.props.unitProps.id) {
-			//console.log("Alive and ready for enemy to shoot (after first action, from CWRP)");
-			// console.log(this.props.allyTargetId);
-			//Run only for ally with the selected ID
-			// console.log(this.props.allyTargetId);
-			this.props.shootAlly(this.props.unitProps.name, this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.defense, this.props.unitProps.resist);
-		} else {
-			//this.props.shootAlly("Yep,","this","still","runs");
+		if (this.props.unitProps.totalHP > 0) {
+			this.props.attackAlly(this.props.unitProps);
+
+			if (this.props.allyTargetId === this.props.unitProps.id) {
+				//console.log("Alive and ready for enemy to shoot (after first action, from CWRP)");
+				// console.log(this.props.allyTargetId);
+				//Run only for ally with the selected ID
+				// console.log(this.props.allyTargetId);
+				
+				this.props.shootAlly(this.props.unitProps.name, this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.defense, this.props.unitProps.resist);
+				this.props.movesTowardAlly(this.props.unitProps);
+			}
+			// this.props.movesTowardAlly(this.props.unitProps);
+
 		}
 	}
 
@@ -174,11 +187,16 @@ export default class Ally extends React.Component{
 			selectedHighlight = true;
 		}
 
+		var waiting = false;
+		if (this.waiting) {
+			waiting = true;
+		}
+
 		//onClick accesses info and selects the unit
 		return (
 			<img
 				//Combine the img-responsive class and a class toggle based on whether the image is the selected unit
-				className={"allyUnit " + [this.props.responsive, this.props.cursorAlly, selectedHighlight ? 'selected' : ''].join(' ')}
+				className={"allyUnit " + [this.props.responsive, this.props.cursorAlly, waiting ? 'wait' : '', selectedHighlight ? 'selected' : ''].join(' ')}
 				src={"assets/images/" + [this.state.alive ? this.props.unitProps.image : 'miccatl.png']}
 				width={this.props.unitWidth}
 				height={this.props.unitHeight}

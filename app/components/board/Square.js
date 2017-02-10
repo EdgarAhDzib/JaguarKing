@@ -57,6 +57,15 @@ class Square extends React.Component{
 			this.openSquare.open = true;
 		}
 		*/
+		if (this.props.children[0].length === 12 && this.props.children[1].length === 12) {
+			for (let i=0; i<12; i++) {
+				if (this.props.children[0][i] !== null) {
+					this.props.enemySpace(this.props, this.props.children[0][i].key);
+				} else if (this.props.children[1][i] !== null) {
+					this.props.enemySpace(this.props, this.props.children[1][i].key);
+				}
+			}
+		}
 	}
 
 	render() {

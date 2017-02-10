@@ -9,6 +9,7 @@ import { connect } from "react-redux";
 // Imports for the Redux actions
 // import { tahui, fireball, kieri } from '../../actions/spellActions'
 import { shootEnemy, boltEnemy, attackEnemy, tahui, fireball, kieri } from '../../actions/movesActions'
+import { selectTeam } from '../../actions/teamsActions'
 
 @connect((store) => {
 	//console.log(store);
@@ -37,6 +38,8 @@ import { shootEnemy, boltEnemy, attackEnemy, tahui, fireball, kieri } from '../.
 		castersNum: store.moves.castersNum,
 		unitIsAffected: store.moves.unitIsAffected,
 
+		playerTeam: store.teams.team
+
 		//prevXY: store.moves.prevXY
 	};
 })
@@ -48,6 +51,21 @@ export default class Arena extends React.Component{
 		this.state = {
 			playerTurn: true,
 
+			enemyOccPos: [
+				[5,5],
+				[4,6],
+				[6,4],
+				[7,3],
+				[3,7],
+				[4,5],
+				[5,4],
+				[6,3],
+				[3,6],
+				[7,2],
+				[2,7],
+				[4,4]
+				//Temporarily moved to [12,11],[11,12] for melee testing	
+			],
 			allyOccPos: [
 				[12,12],
 				[13,11],
@@ -84,6 +102,7 @@ export default class Arena extends React.Component{
 			cursorSword: "",
 			cursorAlly: "",
 			actionIsSelected: false,
+			waitClicked: false,
 			selectedSpell: "",
 
 			//Unit properties
@@ -111,8 +130,14 @@ export default class Arena extends React.Component{
 			selectedSpell : "",
 			spellCost : 0,
 			enemyNeighbor : false,
-			neighborCoords: []
+			neighborCoords: [],
 		};
+
+		this.reset = {
+			speed: false,
+			initEnemyMoves: [],
+			initAllyMoves: [],
+		}
 
 		this.enemyTeamUnits = {
 			projectileUnits : [],
@@ -121,7 +146,8 @@ export default class Arena extends React.Component{
 
 		this.allyCalculations = {
 			rankAllyHp : [],
-			allyTargetId : ""
+			allyTargetId : "",
+			allOccupied : [],
 		};
 
 		this.allyPositions = [
@@ -152,7 +178,6 @@ export default class Arena extends React.Component{
 				[7,2],
 				[2,7],
 				[4,4]
-				//Temporarily moved to [12,11],[11,12] for melee testing
 		];
 
 		this.targetSquares = [];
@@ -173,6 +198,7 @@ export default class Arena extends React.Component{
 		this.movesTowardAlly = this.movesTowardAlly.bind(this);
 		this.shootAlly = this.shootAlly.bind(this);
 		this.assessAllyUnit = this.assessAllyUnit.bind(this);
+		this.enemySpace = this.enemySpace.bind(this);
 
 		//Functions from the Redux reducers
 		this.getUnit = this.getUnit.bind(this);
@@ -186,10 +212,10 @@ export default class Arena extends React.Component{
 	}
 
 	emptySquare(open) {
-		console.log(open);
+		// console.log(open);
 		this.arenaAction.actionIsSelected = true;
 
-		var enemyPositions = this.enemyPositions;
+		var enemyPositions = this.state.enemyOccPos;
 
 		var coordArray = [];
 		if (open.ally) {
@@ -253,11 +279,11 @@ export default class Arena extends React.Component{
 				unitY: selectedY,
 			});
 
-			for (let i=0; i<this.allyPositions.length; i++) {
-				if (this.allyPositions[i][0] == selectedX && this.allyPositions[i][1] == selectedY) {
+			for (let i=0; i<this.state.allyOccPos.length; i++) {
+				if (this.state.allyOccPos[i][0] == selectedX && this.state.allyOccPos[i][1] == selectedY) {
 					// console.log("coords match");
 					// console.log(selectedX,selectedY);
-					console.log("Array position", i);
+					// console.log("Array position", i);
 					this.occPosIndex = i;
 				}
 			}
@@ -375,6 +401,7 @@ export default class Arena extends React.Component{
 
 			}
 		}
+		console.log(this.state.allyMoves);
 	}
 
 	getUnit(unit) {
@@ -549,15 +576,8 @@ export default class Arena extends React.Component{
 		//Then melee-based enemies follow --> this might work better within shootAlly() scope
 	}
 
-	attackAlly(){
-		//Cf. attackEnemy function
-	}
-
-	movesTowardAlly(){
-
-	}
-
 	shootAlly(name, id, hp, defense, resist){
+		// console.log("Shoot Ally function");
 
 		if (id && hp && defense && resist && !this.state.playerTurn) {
 			// console.log("All stats reported");
@@ -575,7 +595,6 @@ export default class Arena extends React.Component{
 					}
 				}
 			}
-			console.log(this.previousUnit);
 
 			//If enemy attacker shoots with projectile ammo
 			if (this.previousUnit.prevUnitProps.ammo > 0) {
@@ -596,6 +615,206 @@ export default class Arena extends React.Component{
 			}
 		}
 	}
+	
+	attackAlly(unit) {
+		//Cf. attackEnemy function
+		//TO WORK: revise movesTowardAlly() so that it doesn't run if it's next to an ally - fights with melee instead
+		if (unit && !this.state.playerTurn) {
+			console.log("attackAlly");
+			//console.log(unit);
+
+			var meleeUnits = this.enemyTeamUnits.meleeUnits;
+
+			if (meleeUnits.length > 0) {
+				for (let i=0; i<meleeUnits.length; i++) {
+					if (meleeUnits[i]['speed'] > 0) {
+						this.selectedArenaUnit.selectUnitProps = meleeUnits[i];
+					}
+				}
+			}
+
+			var enemyUnitProps = this.selectedArenaUnit.selectUnitProps;
+			// console.log(enemyUnitProps.id, "XY", enemyUnitProps.xPos, enemyUnitProps.yPos, "speed", enemyUnitProps.speed);
+
+			// Compare enemy unit's position to ally's for adjacency
+			function calculateAdjacency(enemyX, enemyY, enemyID, allyID) {
+				if (unit.xPos && unit.yPos) {
+					if (Math.abs(enemyY - unit.yPos) <= 1 && Math.abs(enemyX - unit.xPos) <= 1) {
+						return true;
+					}
+
+				} else {
+					if (Math.abs(enemyY - unit.initY) <= 1 && Math.abs(enemyX - unit.initX) <= 1) {
+						return true;
+					}
+
+				}
+			}
+
+			if (calculateAdjacency(enemyUnitProps.xPos, enemyUnitProps.yPos, enemyUnitProps.id, unit.id) ) {
+				console.log("Adjacent", enemyUnitProps.id, unit.id)
+				console.log("Attacker Id:", this.selectedArenaUnit.selectUnitProps.id, "number", this.selectedArenaUnit.selectUnitProps.no, "melee", this.selectedArenaUnit.selectUnitProps.melee, "defense", this.selectedArenaUnit.selectUnitProps.defense);
+				console.log(unit.id, unit.totalHP, unit.defense, unit.melee, unit.no);
+				this.props.dispatch(attackEnemy(this.selectedArenaUnit.selectUnitProps.id, this.selectedArenaUnit.selectUnitProps.totalHP, this.selectedArenaUnit.selectUnitProps.melee, this.selectedArenaUnit.selectUnitProps.no, this.selectedArenaUnit.selectUnitProps.defense, unit.id, unit.totalHP, unit.defense, unit.melee, unit.no) );
+				this.reduceAction(2,"current");
+			}
+		}
+	}
+
+	enemySpace(square, id) {
+		
+		//var allOccupied = this.allyCalculations.allOccupied;
+		var match = false;
+		var index = 0;
+
+		if (square) {
+			for (let i=0; i<this.allyCalculations.allOccupied.length; i++) {
+				if (id === this.allyCalculations.allOccupied[i][0]) {
+					match = true;
+					index = i;
+				}
+			}
+
+			//Store the occupied coordinates into the allOccupied property
+			if (!match) {
+				this.allyCalculations.allOccupied.push([id, square.xCoord, square.yCoord]);
+			} else {
+				this.allyCalculations.allOccupied.splice(index, 1, [id, square.xCoord, square.yCoord]);
+			}
+		}
+	}
+
+	movesTowardAlly(unit) {
+		// TO WORK: this should run only if not contiguous with ally
+		if (unit && !this.state.playerTurn) {
+			//console.log(unit.id);
+			//console.log(this.allyCalculations);
+
+			//TO WORK: this.allyCalculations.rankAllyHp needs a lot of repair, it gets duplicates
+			//Should the target ally units be sorted again? They don't seem to be running after shootAlly
+
+			var meleeUnits = this.enemyTeamUnits.meleeUnits;
+
+			if (meleeUnits.length > 0) {
+				for (let i=0; i<meleeUnits.length; i++) {
+					if (meleeUnits[i]['speed'] > 0) {
+						this.selectedArenaUnit.selectUnitProps = meleeUnits[i];
+					}
+				}
+			}
+
+			var enemyUnitProps = this.selectedArenaUnit.selectUnitProps;
+
+			var distance = 0;
+			var distanceCoords = [];
+
+			// console.log(enemyUnitProps.id, "XY", enemyUnitProps.xPos, enemyUnitProps.yPos, "speed", enemyUnitProps.speed);
+
+			function calculateDistance(enemyX, enemyY) {
+				if (unit.xPos && unit.yPos) {
+					if (Math.abs(enemyY - unit.yPos) > Math.abs(enemyX - unit.xPos) ) {
+						// console.log("The Y distance is greater");
+						distance = Math.abs(enemyX - unit.xPos);
+						// console.log("distance", distance);
+						distanceCoords.push([distance, enemyX, enemyY]);
+					} else {
+						// console.log("The X distance is greater");
+						distance = Math.abs(enemyY - unit.yPos);
+						// console.log("distance", distance);
+						distanceCoords.push([distance, enemyX, enemyY]);
+					}
+				} else {
+					// console.log(unit.initX, unit.initY);
+					// console.log(Math.abs(enemyX - unit.initX), Math.abs(enemyY - unit.initY));
+					if (Math.abs(enemyY - unit.initY) > Math.abs(enemyX - unit.initX) ) {
+						// console.log("The Y distance is greater");
+						distance = Math.abs(enemyX - unit.initX);
+						// console.log("distance", distance);
+						distanceCoords.push([distance, enemyX, enemyY]);
+					} else {
+						// console.log("The X distance is greater");
+						distance = Math.abs(enemyY - unit.initY);
+						// console.log("distance", distance);
+						distanceCoords.push([distance, enemyX, enemyY]);
+					}
+
+				}
+			}
+
+			calculateDistance(enemyUnitProps.xPos, enemyUnitProps.yPos);
+
+			var enemyPositions = this.enemyPositions;
+			var coordArray = [];
+
+			//If absolute value of square distance x <= 1 && absolute value of distance y <= 1, push to coordArray
+			//Compare the X coordinates to the unit's
+			for (let i=0; i<16; i++) {
+				//Compare the Y coordinates to the unit's
+				for (let j=0; j<16; j++) {
+					if (enemyUnitProps.speed > 0 && enemyUnitProps.totalHP > 0) {
+						if (Math.abs(enemyUnitProps.xPos - i) <= 1 && Math.abs(enemyUnitProps.yPos - j) <= 1) {
+							coordArray.push([i,j]);
+						}
+						//start from initialized positions if unit's xPos and yPos haven't been yet set
+					} else {
+						if (Math.abs(enemyUnitProps.initX - i) <= 1 && Math.abs(enemyUnitProps.initY - j) <= 1) {
+							coordArray.push([i,j]);
+						}
+					}
+				}
+			}
+
+			//Check which squares are open for movement
+			this.enemySpace();
+
+			//console.log(this.allyCalculations.allOccupied);
+
+			if (coordArray.length > 0) {
+				console.log(coordArray.length);
+				for (let i=0; i<coordArray.length; i++) {
+					console.log(coordArray[i]);
+					for (let j=0; j<this.allyCalculations.allOccupied.length; j++) {
+						if (coordArray[i] && coordArray[i][0] === this.allyCalculations.allOccupied[j][1] && coordArray[i][1] === this.allyCalculations.allOccupied[j][2]) {
+							console.log(coordArray[i]);
+							coordArray.splice(i, 1);
+						}
+					}
+				}
+			}
+
+			for (let i=0; i<coordArray.length; i++) {
+				// console.log(coordArray[i]);
+				calculateDistance(coordArray[i][0],coordArray[i][1]);
+			}
+
+			function sortByDistance(a, b) {
+				return a[0] - b[0];
+			}
+
+			distanceCoords.sort(sortByDistance);
+			// console.log(unit.id, "Square to shortest distance", distanceCoords[0][0], distanceCoords[0][1]);
+
+			var updateCoords = this.state.enemyOccPos;
+			
+			for (let i=0; i<this.state.enemyOccPos.length; i++) {
+				if (this.state.enemyOccPos[i][0] == enemyUnitProps.xPos && this.state.enemyOccPos[i][1] == enemyUnitProps.yPos) {
+					// console.log("coords match");
+					// console.log(selectedX,selectedY);
+					this.occPosIndex = i;
+				}
+			}
+
+			// console.log("Array position from THIS", this.occPosIndex);
+
+			//Update the enemy units' respective coordinates to advance movement
+			if (enemyUnitProps.speed > 0) {
+				updateCoords.splice(this.occPosIndex, 1, [distanceCoords[0][0], distanceCoords[0][1] ]);
+				this.setState({enemyOccPos:updateCoords});
+				this.reduceAction(1,"current");
+			}
+
+		} //Closes the if (unit) condition required for the operations
+	}
 
 	assessAllyUnit(unit){
 		//Enemy side calls this function to access ally stats for calculations
@@ -606,7 +825,7 @@ export default class Arena extends React.Component{
 		var duplicateId = "";
 
 		function sortByHP(a, b) {
-		    return a[0] - b[0];
+			return a[0] - b[0];
 		}
 
 		if (unit) {
@@ -644,11 +863,14 @@ export default class Arena extends React.Component{
 	}
 
 	componentDidMount() {
+		console.log(this.props.playerTeam);
+		// axios.post("/enemies/" + this.props.playerTeam).then(function(response) {
 		axios.get("/enemies").then(function(response) {
 			var teamlength = response.data.enemyteam.length;
 			var movesArray = [];
 			for (let i=0; i<teamlength; i++) {
 				movesArray.push([response.data.enemyteam[i]['_id'] + "EN" + [i], response.data.enemyteam[i]['speed']]);
+				this.reset.initEnemyMoves.push([response.data.enemyteam[i]['_id'] + "EN" + [i], response.data.enemyteam[i]['speed']]);
 			}
 			this.setState({ 
 				enemies:response.data.enemyteam,
@@ -656,11 +878,13 @@ export default class Arena extends React.Component{
 			});
 			this.props.enemySide(response.data.team);
 		}.bind(this) );
+		// axios.post("/team/" + this.props.playerTeam).then(function(response) {
 		axios.get("/allies").then(function(response) {
 			var teamlength = response.data.enemyteam.length;
 			var movesArray = [];
 			for (let i=0; i<teamlength; i++) {
 				movesArray.push([response.data.enemyteam[i]['_id'] + "AL" + [i], response.data.enemyteam[i]['speed']]);
+				this.reset.initAllyMoves.push([response.data.enemyteam[i]['_id'] + "AL" + [i], response.data.enemyteam[i]['speed']]);
 			}
 			this.setState({ 
 				allies: response.data.enemyteam,
@@ -681,6 +905,8 @@ export default class Arena extends React.Component{
 
 		if (!this.state.playerTurn) {
 			this.shootAlly();
+			this.movesTowardAlly();
+			this.attackAlly();
 		}
 
 		this.assessAllyUnit();
@@ -723,6 +949,16 @@ export default class Arena extends React.Component{
 			}
 		}
 		//console.log(this.targetSquares);
+		if (this.reset.speed) {
+			console.log("Reset speed");
+			console.log(this.reset.initEnemyMoves);
+			console.log(this.reset.initAllyMoves);
+			this.setState({
+				enemyMoves: this.reset.initEnemyMoves,
+				allyMoves: this.reset.initAllyMoves,
+			});
+			this.reset.speed = false;
+		}
 	}
 
 	componentWillReceiveProps(newProps) {
@@ -779,6 +1015,17 @@ export default class Arena extends React.Component{
 			playerTurn: newProps.playerTurn
 		});
 
+		if (newProps.waitClicked) {
+			console.log("WAIT button");
+			this.setState({waitClicked: true});
+		} else {
+			this.setState({waitClicked: false});
+		}
+
+		if (newProps.resetSpeed) {
+			this.reset.speed = true;
+		}
+
 		console.log(newProps);
 		//console.log(this.previousUnit);
 
@@ -795,8 +1042,11 @@ export default class Arena extends React.Component{
 		var x = i % 16;
 		var y = Math.floor(i / 16);
 		
-		var enemyArr = this.enemyPositions;
+		//var enemyArr = this.enemyPositions;
+		var enemyArr = this.state.enemyOccPos;
 		var allyArr = this.state.allyOccPos;
+		var enemyMovesArr = this.state.enemyMoves;
+		var allyMovesArr = this.state.allyMoves;
 		var currStats = this.props.getUnitInfo;
 		var playerTurn = this.state.playerTurn;
 
@@ -813,6 +1063,7 @@ export default class Arena extends React.Component{
 		var propsUnitId = this.selectedArenaUnit.selectedUnitId;
 		var unitIsSelected = this.state.unitIsSelected;
 		var movesLeft = this.selectedArenaUnit.selectUnitProps.speed;
+		var waitClicked = this.state.waitClicked;
 		var cursorEnemy = this.state.cursorEnemy;
 		var cursorSword = this.state.cursorSword;
 		var cursorAlly = this.state.cursorAlly;
@@ -866,7 +1117,10 @@ export default class Arena extends React.Component{
 		var enemyMovesLeft = this.props.speed;
 		var currentEnemyId = this.previousUnit.prevUnitProps.id
 		var sortEnemyUnits = this.sortEnemyUnits;
+		var attackAlly = this.attackAlly;
 		var shootAlly = this.shootAlly;
+		var movesTowardAlly = this.movesTowardAlly;
+		var enemySpace = this.enemySpace;
 		var assessAllyUnit = this.assessAllyUnit;
 		var allyTargetId = this.allyCalculations.allyTargetId;
 
@@ -893,6 +1147,12 @@ export default class Arena extends React.Component{
 			unit.id = unit._id + "EN" + inc;
 
 			//Initialize the unit's speed, which will be automatically reset and/or magically manipulated for next turn
+			var initSpeedArr = enemyMovesArr;
+			for (let i=0; i<initSpeedArr.length; i++) {
+				if (unit.id === initSpeedArr[i][0]) {
+					unit.speed = initSpeedArr[i][1];
+				}
+			}
 			unit.initSpeed = unit.speed;
 
 			if (!unit.affected) {
@@ -979,10 +1239,17 @@ export default class Arena extends React.Component{
 
 			unit.id = unit._id + "AL" + inc;
 
+			//Initialize the unit's speed, which will be automatically reset and/or magically manipulated for next turn
+			var initSpeedArr = allyMovesArr;
+			for (let i=0; i<initSpeedArr.length; i++) {
+				if (unit.id === initSpeedArr[i][0]) {
+					unit.speed = initSpeedArr[i][1];
+				}
+			}
+			unit.initSpeed = unit.speed;
+
 			unit.initX = allyArr[inc][0];
 			unit.initY = allyArr[inc][1];
-			//Initialize the unit's speed, which will be automatically reset and/or magically manipulated for next turn
-			unit.initSpeed = unit.speed;
 
 			unit.ally = true;
 
@@ -1035,10 +1302,13 @@ export default class Arena extends React.Component{
 				previousCoords : previousCoords,
 				updateCoords : updateCoords,
 				unitIsSelected : unitIsSelected,
+				waitClicked: waitClicked,
 				resetSelection : resetSelection,
 
 				//Properties for enemy to calculate moves
+				attackAlly: attackAlly,
 				shootAlly: shootAlly,
+				movesTowardAlly: movesTowardAlly,
 				assessAllyUnit: assessAllyUnit,
 				allyTargetId: allyTargetId,
 
@@ -1176,7 +1446,7 @@ export default class Arena extends React.Component{
 			<div key={i} style={{ width: '6.25%', height: '6.25%' }}>
 				<Square xCoord={x} yCoord={y} isOpen={isOpen} boardSquare={'boardSquare'} cursorEnemy={cursorEnemy}
 				available={available} moveToXY={moveToXY} reduceAction={reduceAction} unitIsSelected={unitIsSelected}
-				resetSelection={resetSelection}
+				resetSelection={resetSelection} enemySpace={enemySpace}
 				//TO WORK: these may be removed
 				selectedUnitX={selectedUnitX} selectedUnitY={selectedUnitY} movesLeft={movesLeft}
 				>
@@ -1201,6 +1471,8 @@ export default class Arena extends React.Component{
 		// console.log(this.enemyTeamUnits.projectileUnits);
 		// console.log(this.enemyTeamUnits.meleeUnits);
 		// console.log(this.allyCalculations.allyTargetId);
+		console.log(this.reset.initAllyMoves);
+		// console.log(this.reset.initEnemyMoves);
 
 		var squares = [];
 		for (let i = 0; i < 256; i++) {

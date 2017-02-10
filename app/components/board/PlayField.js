@@ -14,7 +14,9 @@ export default class PlayField extends React.Component{
 		super();
 		this.state = {
 			playerTurn: true,
-			
+			wait: false,
+			resetSpeed: false,
+
 			isShowingModal: false,
 			secondModal: false,
 			unitStats: "",
@@ -67,6 +69,7 @@ export default class PlayField extends React.Component{
 		this.spellIsCast = this.spellIsCast.bind(this);
 		this.getUnitInfo = this.getUnitInfo.bind(this);
 		this.enemyTurn = this.enemyTurn.bind(this);
+		this.wait = this.wait.bind(this);
 
 		this.enemySide = this.enemySide.bind(this);
 		this.allySide = this.allySide.bind(this);
@@ -153,10 +156,17 @@ export default class PlayField extends React.Component{
 
 	enemyTurn() {
 		this.setState({
-			playerTurn: false
+			playerTurn: !this.state.playerTurn,
+			resetSpeed: true
 		});
 	// TO WORK: the DONE button should reset the units' movements, also changing the state for allyMoves
 	// or enemyMoves arrays; Also cannot choose spell during enemy's turn
+	}
+
+	wait() {
+		if (this.state.playerTurn) {
+			this.setState({wait: !this.state.wait});
+		}
 	}
 
 	chooseField(event) {
@@ -236,6 +246,9 @@ export default class PlayField extends React.Component{
 		var cursorIcon = this.combatSpell.cursorIcon;
 		var combatSpell = this.combatSpell.selectedSpell;
 		var spellCost = this.combatSpell.cost;
+		var wait = this.wait;
+		var waitClicked = this.state.wait;
+		var resetSpeed = this.state.resetSpeed;
 
 		// console.log(this.combatSpell);
 		// console.log(this.state.playerTurn);
@@ -275,7 +288,8 @@ export default class PlayField extends React.Component{
 							<Arena getUnitInfo={this.getUnitInfo} allySide={this.allySide} enemySide={this.enemySide}
 							selectedSpell={combatSpell} cursorIcon={cursorIcon} selectedUnitId={this.unitStats.unit.id}
 							resetAction={this.resetAction} spellCost={spellCost} spellIsCast={spellIsCast}
-							playerTurn={this.state.playerTurn} enemyTurn={this.enemyTurn} />
+							playerTurn={this.state.playerTurn} enemyTurn={this.enemyTurn} waitClicked={waitClicked}
+							resetSpeed={resetSpeed} />
 						</div>
 					</div>
 					<div className="infoPanel" style={{
@@ -386,7 +400,7 @@ export default class PlayField extends React.Component{
 									</RaisedButton>
 								</div>
 								<div style={{width:'50%'}} >
-									<RaisedButton label="WAIT" primary={this.state.playerTurn ? true : false} secondary={this.state.playerTurn ? false : true} />
+									<RaisedButton label="WAIT" primary={this.state.playerTurn ? true : false} secondary={this.state.playerTurn ? false : true} onClick={wait} />
 								</div>
 								<div style={{width:'50%'}} >
 									<RaisedButton label="DONE" primary={this.state.playerTurn ? true : false} secondary={this.state.playerTurn ? false : true} onClick={this.enemyTurn} />

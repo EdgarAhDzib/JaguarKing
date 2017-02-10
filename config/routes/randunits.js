@@ -50,6 +50,8 @@ router.get('/randunit', (req, res) => {
 	);
 });
 
+//TO WORK: These could be removed if the team selector routes work properly
+
 router.get("/enemies", function(req, res) {
 
 	//Initialize a variable that will then receive the value of a team Id, for the next query to reference

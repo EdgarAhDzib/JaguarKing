@@ -27,11 +27,13 @@ export default class Enemy extends React.Component{
 	}
 
 	componentWillReceiveProps(newProps){
-		//This isn't getting updated: it is showing the properties passed through the Enemy component
+		//TO WORK: This isn't getting updated: it is showing the properties passed through the Enemy component
 		//console.log(newProps.unitHP);
 		if (this.state.totalHP !== newProps.unitHP) {
 			this.setState({totalHP:newProps.unitHP});
 		}
+
+		// console.log(newProps);
 
 		var stringCoords = [];
 		//Convert the arrays to dash-separated strings, each pushed into a new array

@@ -2,8 +2,6 @@ var React = require("react");
 import Enemy from "../units/Enemy";
 import Ally from "../units/Ally";
 
-//var UnitInfo = React.createClass({
-
 export default class UnitInfo extends React.Component{
 	constructor() {
 		super();

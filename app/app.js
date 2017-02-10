@@ -1,6 +1,7 @@
 var React = require("react");
 var ReactDOM = require("react-dom");
 import PlayField from "./components/board/PlayField";
+import routes from "./config/routes";
 
 import { Provider } from "react-redux"
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
@@ -10,7 +11,7 @@ import store from "./store"
 
 ReactDOM.render(
   <Provider store={store}>
-    <PlayField />
+    {routes}
   </Provider>,
 document.getElementById('app'));
 

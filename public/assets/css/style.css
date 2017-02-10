@@ -123,6 +123,15 @@ body {
 	box-shadow: 1px 1px 2px yellow, 0 0 25px yellow, 0 0 5px yellow;
 }
 
+.wait {
+	-webkit-filter: drop-shadow(1px 1px 0 red)
+		drop-shadow(-1px -1px 0 red);
+	filter: drop-shadow(1px 1px 0 red)
+		drop-shadow(-1px -1px 0 red);
+	/* Test for CSS response: the bottom works, the top does not; */
+	box-shadow: 1px 1px 2px red, 0 0 25px red, 0 0 5px red;
+}
+
 .availableSquare {
 	box-shadow: 2px 2px 2px 2px green;
 	cursor: url('../images/cursors/footprint.png'), auto;
@@ -170,6 +179,9 @@ img:hover {
 	box-shadow: 1px 1px 2px red, 0 0 25px blue, 0 0 5px green;
 }
 
+a {
+	text-decoration: none;
+}
 /*
 .battleField {
 	background-color: powderblue;
