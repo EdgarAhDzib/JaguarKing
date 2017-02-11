@@ -22,14 +22,14 @@ export default class Ally extends React.Component{
 
 		var selectProp = this.props.selectUnit;
 
+		this.props.getUnitInfo(this.props.unitProps);
 		//This is preventing the disappearance
 		//TO WORK: Revise to allow for movement, passive actions
 		//AND CONDITION FOR ONLY IF STILL ALIVE
-		if (unitIsSelected === false) {
+		if (!unitIsSelected && this.props.playerTurn) {
 
 			// Getting unit info
-			this.props.getUnitInfo(this.props.unitProps);
-			this.props.getUnit(this.props.unitProps);
+			this.props.getAllyUnit(this.props.unitProps);
 
 			// Setting up conditions for proper movement
 			this.props.emptySquare(this.props.unitProps);

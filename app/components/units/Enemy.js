@@ -15,12 +15,12 @@ export default class Enemy extends React.Component{
 
 	handleClick() {
 		this.props.getUnitInfo(this.props.unitProps);
-		this.props.getUnit(this.props.unitProps);
+		this.props.getEnemyUnit(this.props.unitProps);
 
 		this.props.damageSpell(this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.resist);
-		this.props.shootEnemy(this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.defense, this.props.unitProps.resist);
+		this.props.shootEnemy(this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.defense, this.props.unitProps.resist, this.props.unitProps.name);
 		if (this.proximate.attack) {
-			this.props.attackEnemy(this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.defense, this.props.unitProps.melee, this.props.unitProps.no);
+			this.props.attackEnemy(this.props.unitProps.id, this.props.unitProps.totalHP, this.props.unitProps.defense, this.props.unitProps.melee, this.props.unitProps.no, this.props.unitProps.name);
 		}
 		
 		this.props.resetSelection();

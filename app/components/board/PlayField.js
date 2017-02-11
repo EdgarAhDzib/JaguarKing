@@ -31,6 +31,8 @@ export default class PlayField extends React.Component{
 			allyLeader: "",
 			enemyZaki: 0,
 			allyZaki: 0,
+			enemyAction: "",
+			allyAction: "",
 			spellField: "",
 			spellList: [],
 			selectedSpell: "",
@@ -66,6 +68,8 @@ export default class PlayField extends React.Component{
 		this.handleClose = this.handleClose.bind(this);
 		this.chooseField = this.chooseField.bind(this);
 		this.selectedSpell = this.selectedSpell.bind(this);
+		this.displayEnemy = this.displayEnemy.bind(this);
+		this.displayAlly = this.displayAlly.bind(this);
 		this.spellIsCast = this.spellIsCast.bind(this);
 		this.getUnitInfo = this.getUnitInfo.bind(this);
 		this.enemyTurn = this.enemyTurn.bind(this);
@@ -118,6 +122,14 @@ export default class PlayField extends React.Component{
     	});
 		*/
 		console.log("resetAction function");
+	}
+
+	displayEnemy(actionText) {
+		this.setState({enemyAction: actionText});
+	}
+
+	displayAlly(actionText) {
+		this.setState({allyAction: actionText});
 	}
 
 	componentDidMount() {
@@ -289,7 +301,7 @@ export default class PlayField extends React.Component{
 							selectedSpell={combatSpell} cursorIcon={cursorIcon} selectedUnitId={this.unitStats.unit.id}
 							resetAction={this.resetAction} spellCost={spellCost} spellIsCast={spellIsCast}
 							playerTurn={this.state.playerTurn} enemyTurn={this.enemyTurn} waitClicked={waitClicked}
-							resetSpeed={resetSpeed} />
+							resetSpeed={resetSpeed} displayEnemy={this.displayEnemy} displayAlly={this.displayAlly} />
 						</div>
 					</div>
 					<div className="infoPanel" style={{
@@ -318,7 +330,12 @@ export default class PlayField extends React.Component{
 					flexWrap: 'wrap'
 					}}
 					>
-						<h3>{this.state.enemyName}</h3>
+						<MuiThemeProvider>
+							<List>
+								<ListItem primaryText={this.state.enemyName} />
+								<ListItem primaryText={this.state.enemyAction} />
+							</List>
+						</MuiThemeProvider>
 					</div>
 					<div className="enemyStats" style={{
 					width: '20%',
@@ -328,9 +345,9 @@ export default class PlayField extends React.Component{
 					flexWrap: 'wrap'
 					}}
 					>
-						<h3>{this.state.enemyLeader}<br/></h3>
 						<MuiThemeProvider>
 							<List>
+								<ListItem primaryText={this.state.enemyLeader} />
 								<ListItem primaryText={"Zakí " + this.state.enemyZaki} />
 							</List>
 						</MuiThemeProvider>
@@ -416,9 +433,9 @@ export default class PlayField extends React.Component{
 					flexWrap: 'wrap'
 					}}
 					>
-						<h3>{this.state.allyLeader}</h3><br/>
 						<MuiThemeProvider>
 							<List>
+								<ListItem primaryText={this.state.allyLeader} />
 								<ListItem primaryText={"Zakí " + this.state.allyZaki} />
 								<ListItem primaryText={"Spell " + this.combatSpell.selectedSpell} />
 							</List>
@@ -432,7 +449,12 @@ export default class PlayField extends React.Component{
 					flexWrap: 'wrap'
 					}}
 					>
-						<h3>{this.state.allyName}</h3>
+						<MuiThemeProvider>
+							<List>
+								<ListItem primaryText={this.state.allyName} />
+								<ListItem primaryText={this.state.allyAction} />
+							</List>
+						</MuiThemeProvider>
 					</div>
 				</div>
 			</div>

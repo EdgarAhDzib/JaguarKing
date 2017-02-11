@@ -22,10 +22,10 @@ export function kieri(unit) {
 }
 
 //Move actions
-export function shootEnemy(prevId, attackerHp, ranged, num, ammo, id, hp, defense) {
+export function shootEnemy(prevAllyId, attackerHp, ranged, num, ammo, id, hp, defense) {
   return {
     type: 'shootEnemy',
-    prevId: prevId,
+    prevAllyId: prevAllyId,
     prevHp: attackerHp,
     attack: ranged,
     num: num,

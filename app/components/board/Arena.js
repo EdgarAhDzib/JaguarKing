@@ -15,7 +15,7 @@ import { selectTeam } from '../../actions/teamsActions'
 	//console.log(store);
 	return {
 		//Properties from reducer
-		prevId: store.moves.prevId,
+		prevAllyId: store.moves.prevAllyId,
 		prevHp: store.moves.prevHp,
 		unitId: store.moves.unitId,
 		totalHP: store.moves.totalHP,
@@ -111,7 +111,9 @@ export default class Arena extends React.Component{
 		};
 
 		//Constructor objects to store changing properties
-		this.selectedArenaUnit = { 
+		this.selectedArenaUnit = {
+			selectedAllyId: "",
+			selectedEnemyId: "",
 			selectedUnitId : "",
 			selectUnit: false,
 			selectUnitProps : {}
@@ -120,7 +122,17 @@ export default class Arena extends React.Component{
 		//Set up props for previous unit, unit ready for action upon target
 		this.previousUnit = {
 			prevUnitId : "",
-			prevUnitProps : {}
+			prevUnitProps : {},
+		};
+
+		this.previousEnemy = {
+			prevEnemyId : "",
+			prevEnemyProps : {},
+		}
+
+		this.previousAlly = {
+			prevAllyId : "",
+			prevAllyProps : {}
 		};
 
 		this.arenaAction = { 
@@ -199,9 +211,10 @@ export default class Arena extends React.Component{
 		this.shootAlly = this.shootAlly.bind(this);
 		this.assessAllyUnit = this.assessAllyUnit.bind(this);
 		this.enemySpace = this.enemySpace.bind(this);
+		this.getAllyUnit = this.getAllyUnit.bind(this);
+		this.getEnemyUnit = this.getEnemyUnit.bind(this);
 
 		//Functions from the Redux reducers
-		this.getUnit = this.getUnit.bind(this);
 		this.previousCoords = this.previousCoords.bind(this);
 		this.shootEnemy = this.shootEnemy.bind(this);
 		this.attackEnemy = this.attackEnemy.bind(this);
@@ -272,9 +285,6 @@ export default class Arena extends React.Component{
 			// this.selectedArenaUnit.selectUnitProps.YPos = selectedY;
 
 			this.setState({
-				//targetSquares: coordArray,
-				//selectedUnitId: open.id,
-				// movesLeft: open.speed,
 				unitX: selectedX,
 				unitY: selectedY,
 			});
@@ -311,7 +321,7 @@ export default class Arena extends React.Component{
 		//TO WORK: This needs comparison with the updateCoords, it must not run if the coordinates are already occupied
 		//And the reduceAction shouldn't be fired, either
 		//Add this.state.playerTurn condition to ensure that player can't move units during opponent's turn
-		if (unit.length > 0) {
+		if (unit.length > 0 && this.state.playerTurn) {
 			var squareCoord = unit.split(",").map(Number);
 
 			if (squareCoord[0] !== this.state.unitX || squareCoord[1] !== this.state.unitY) {
@@ -342,13 +352,14 @@ export default class Arena extends React.Component{
 	}
 
 	//Speed is a condition: if speed > 0, actions are still available; else no more are permissible
-	reduceAction(action, unit) {
+	reduceAction(action, unit, side) {
 		//If movement, reduce by 1; if attack, reduce by 2
 
 		//Two versions required here: if a spatial movement, use selectedAreaUnit; if attack, use previousUnit
 		//Incorporate as second argument in this function, to compare whether speed will be reduced to previous or current unit
 		
 		//TO WORK: add a nested [id,speed] array, to check whether any moves remain and with whom
+		//Side is "enemy" or "ally"
 		var remainingMoves;
 		if (this.state.playerTurn) {
 			remainingMoves = this.state.allyMoves;
@@ -381,7 +392,14 @@ export default class Arena extends React.Component{
 			}
 		} else if (unit === "previous") {
 
-			var currUnit = this.previousUnit.prevUnitProps;
+			var currUnit;
+
+			if (side === "enemy") {
+				currUnit = this.previousEnemy.prevEnemyProps;
+			} else if (side === "ally") {
+				currUnit = this.previousAlly.prevAllyProps;
+			}
+
 			var currUnitId = currUnit.id;
 
 			var tempSpeed = currUnit.speed;
@@ -401,20 +419,41 @@ export default class Arena extends React.Component{
 
 			}
 		}
-		console.log(this.state.allyMoves);
+		// console.log(this.state.allyMoves);
 	}
 
-	getUnit(unit) {
-		if (this.selectedArenaUnit.selectedUnitId !== unit.id && this.state.playerTurn) {
+	getEnemyUnit(unit) {
+		//TO WORK: The totalHP from previously selected unit is being applied to the new one
+		//Revise the algorithm: different IDs for enemy targets, ally units, etc.
+		console.log(unit);
+		if (this.selectedArenaUnit.selectedUnitId !== unit.id && this.selectedArenaUnit.selectUnitProps.ally === true && this.state.playerTurn) {
 
 			//If a new unit is selected, store the props of the previous unit for action
-			this.previousUnit.prevUnitId = this.selectedArenaUnit.selectedUnitId;
-			this.previousUnit.prevUnitProps = this.selectedArenaUnit.selectUnitProps;
+			this.previousAlly.prevAllyId = this.selectedArenaUnit.selectedUnitId;
+			this.previousAlly.prevAllyProps = this.selectedArenaUnit.selectUnitProps;
+		}
 
 			this.selectedArenaUnit.selectedUnitId = unit.id;
 			this.selectedArenaUnit.selectUnit = true;
 			this.selectedArenaUnit.selectUnitProps = unit;
-		}
+			console.log("this.selectedArenaUnit.selectedUnitId");
+			console.log(this.selectedArenaUnit.selectedUnitId);
+			console.log("this.previousAlly.prevAllyId");
+			console.log(this.previousAlly.prevAllyId);
+	}
+
+	getAllyUnit(unit) {
+		//TO WORK: The totalHP from previously selected unit is being applied to the new one
+		//Revise the algorithm: different IDs for enemy targets, ally units, etc.
+		console.log(unit);
+		// if (this.selectedArenaUnit.selectedUnitId !== unit.id && this.selectedArenaUnit.selectUnitProps.ally === true && this.state.playerTurn) {
+
+			this.selectedArenaUnit.selectedUnitId = unit.id;
+			this.selectedArenaUnit.selectUnit = true;
+			this.selectedArenaUnit.selectUnitProps = unit;
+			console.log("this.selectedArenaUnit.selectedUnitId");
+			console.log(this.selectedArenaUnit.selectedUnitId);
+		// }
 	}
 
 	//TO WORK: Will this be necessary? Nothing seems to call it
@@ -426,7 +465,7 @@ export default class Arena extends React.Component{
 
 		//Condition to select muwieri or spear cursor depending whether attack is magic or ranged
 		if (unit.ammo > 0 && unit.speed > 0) {
-			console.log("Spears cursor");
+			// console.log("Spears cursor");
 			this.setState({cursorEnemy: "spears"});
 		} else if (unit.magic > 0 && unit.speed > 0) {
 			this.setState({cursorEnemy: "muwieri"});
@@ -470,30 +509,33 @@ export default class Arena extends React.Component{
 		*/
 	}
 
-	shootEnemy(id, hp, defense, resist) {
-		if (this.state.cursorEnemy === 'spears') {
+	shootEnemy(id, hp, defense, resist, name) {
+		if (this.state.cursorEnemy === 'spears' && this.state.playerTurn && this.previousAlly.prevAllyProps.ally) {
 			//And if target is !ally
 			console.log("Id:", id, "Health:", hp, "Defense:" , defense);
-			console.log("Attacker Id:", this.previousUnit.prevUnitProps.id, "number", this.previousUnit.prevUnitProps.no, "ranged", this.previousUnit.prevUnitProps.ranged, "ammo", this.previousUnit.prevUnitProps.ammo);
-			this.props.dispatch(shootEnemy(this.previousUnit.prevUnitProps.id, this.previousUnit.prevUnitProps.totalHP, this.previousUnit.prevUnitProps.ranged, this.previousUnit.prevUnitProps.no, this.previousUnit.prevUnitProps.ammo, id, hp, defense));
-			this.reduceAction(2,"previous");
-		} else if (this.state.cursorEnemy === 'muwieri') {
+			console.log("Attacker Id:", this.previousAlly.prevAllyProps.id, "number", this.previousAlly.prevAllyProps.no, "ranged", this.previousAlly.prevAllyProps.ranged, "ammo", this.previousAlly.prevAllyProps.ammo);
+			this.props.dispatch(shootEnemy(this.previousAlly.prevAllyProps.id, this.previousAlly.prevAllyProps.totalHP, this.previousAlly.prevAllyProps.ranged, this.previousAlly.prevAllyProps.no, this.previousAlly.prevAllyProps.ammo, id, hp, defense));
+			this.props.displayAlly(this.previousAlly.prevAllyProps.name + " shot " + name);
+			this.reduceAction(2,"previous","ally");
+		} else if (this.state.cursorEnemy === 'muwieri' && this.state.playerTurn && this.previousAlly.prevAllyProps.ally) {
 			console.log("Id:", id, "Health:", hp, "Resist:" , resist);
-			console.log("Attacker Id:", this.previousUnit.prevUnitProps.id, "number", this.previousUnit.prevUnitProps.no, "ranged", this.previousUnit.prevUnitProps.ranged, "bolts", this.previousUnit.prevUnitProps.magic);
-			this.props.dispatch(boltEnemy(this.previousUnit.prevUnitProps.id, this.previousUnit.prevUnitProps.totalHP, this.previousUnit.prevUnitProps.ranged, this.previousUnit.prevUnitProps.no, this.previousUnit.prevUnitProps.magic, id, hp, resist));			
-			this.reduceAction(2,"previous");
+			console.log("Attacker Id:", this.previousAlly.prevAllyProps.id, "number", this.previousAlly.prevAllyProps.no, "ranged", this.previousAlly.prevAllyProps.ranged, "bolts", this.previousAlly.prevAllyProps.magic);
+			this.props.dispatch(boltEnemy(this.previousAlly.prevAllyProps.id, this.previousAlly.prevAllyProps.totalHP, this.previousAlly.prevAllyProps.ranged, this.previousAlly.prevAllyProps.no, this.previousAlly.prevAllyProps.magic, id, hp, resist));			
+			this.props.displayAlly(this.previousAlly.prevAllyProps.name + " shot " + name);
+			this.reduceAction(2,"previous","ally");
 		}
 	}
 
-	attackEnemy(id, hp, defense, melee, num) {
+	attackEnemy(id, hp, defense, melee, num, name) {
 		console.log("attackEnemy function here");
-		if (this.state.cursorSword === 'macuahuitl') {
+		if (this.state.cursorSword === 'macuahuitl' && this.state.playerTurn && this.previousAlly.prevAllyProps.ally) {
 			//And if target is !ally
 			console.log("Id:", id, "Health:", hp, "Defense:" , defense, "Melee:", melee);
-			console.log("Attacker Id:", this.previousUnit.prevUnitProps.id, "number", this.previousUnit.prevUnitProps.no, "melee", this.previousUnit.prevUnitProps.melee, "defense", this.previousUnit.prevUnitProps.defense);
-			this.props.dispatch(attackEnemy(this.previousUnit.prevUnitProps.id, this.previousUnit.prevUnitProps.totalHP, this.previousUnit.prevUnitProps.melee, this.previousUnit.prevUnitProps.no, this.previousUnit.prevUnitProps.defense, id, hp, defense, melee, num));
+			console.log("Attacker Id:", this.previousAlly.prevAllyProps.id, "number", this.previousAlly.prevAllyProps.no, "melee", this.previousAlly.prevAllyProps.melee, "defense", this.previousAlly.prevAllyProps.defense);
+			this.props.dispatch(attackEnemy(this.previousAlly.prevAllyProps.id, this.previousAlly.prevAllyProps.totalHP, this.previousAlly.prevAllyProps.melee, this.previousAlly.prevAllyProps.no, this.previousAlly.prevAllyProps.defense, id, hp, defense, melee, num));
+			this.props.displayAlly(this.previousAlly.prevAllyProps.name + " attacked " + name);
 			this.arenaAction.actionIsSelected = false;
-			this.reduceAction(2,"previous");
+			this.reduceAction(2,"previous","ally");
 		}
 	}
 
@@ -589,29 +631,30 @@ export default class Arena extends React.Component{
 			if (rangedUnits.length > 0) {
 				for (let i=0; i<rangedUnits.length; i++) {
 					if (rangedUnits[i]['speed'] > 0) {
-						this.previousUnit.prevUnitProps = rangedUnits[i];
+						this.previousEnemy.prevEnemyProps = rangedUnits[i];
 						//TO WORK: Necessary? or remove?
-						this.previousUnit.prevUnitId = rangedUnits[i]['id'];
+						this.previousEnemy.prevEnemyId = rangedUnits[i]['id'];
 					}
 				}
 			}
 
 			//If enemy attacker shoots with projectile ammo
-			if (this.previousUnit.prevUnitProps.ammo > 0) {
+			if (this.previousEnemy.prevEnemyProps.ammo > 0) {
 				// Access from Ally component, just the one with matching ID
 				// console.log("Id:", id, "Health:", hp, "Defense:", defense);
 				// console.log("Attacker Id:", this.previousUnit.prevUnitProps.id, "number", this.previousUnit.prevUnitProps.no, "ranged", this.previousUnit.prevUnitProps.ranged, "ammo", this.previousUnit.prevUnitProps.ammo);
-				console.log(this.previousUnit.prevUnitProps.name, "shot", name, id);
-				this.props.dispatch(shootEnemy(this.previousUnit.prevUnitProps.id, this.previousUnit.prevUnitProps.totalHP, this.previousUnit.prevUnitProps.ranged, this.previousUnit.prevUnitProps.no, this.previousUnit.prevUnitProps.ammo, id, hp, defense));
-				// shootEnemy(prevId, attackerHp, ranged, num, ammo, id, hp, defense)
-				this.reduceAction(2,"previous");
+				// console.log(this.previousUnit.prevUnitProps.name, "shot", name, id);
+				this.props.displayEnemy(this.previousEnemy.prevEnemyProps.name + " shot " + name);
+				this.props.dispatch(shootEnemy(this.previousEnemy.prevEnemyProps.id, this.previousEnemy.prevEnemyProps.totalHP, this.previousEnemy.prevEnemyProps.ranged, this.previousEnemy.prevEnemyProps.no, this.previousEnemy.prevEnemyProps.ammo, id, hp, defense));
+				this.reduceAction(2,"previous","enemy");
 			//Else if enemy attacker shoots with magic bolts
-			} else if (this.previousUnit.prevUnitProps.magic > 0) {
+			} else if (this.previousEnemy.prevEnemyProps.magic > 0) {
 				// console.log("Id:", id, "Health:", hp, "Resist:", resist);
 				// console.log("Attacker Id:", this.previousUnit.prevUnitProps.id, "number", this.previousUnit.prevUnitProps.no, "ranged", this.previousUnit.prevUnitProps.ranged, "bolts", this.previousUnit.prevUnitProps.magic);
-				this.props.dispatch(boltEnemy(this.previousUnit.prevUnitProps.id, this.previousUnit.prevUnitProps.totalHP, this.previousUnit.prevUnitProps.ranged, this.previousUnit.prevUnitProps.no, this.previousUnit.prevUnitProps.magic, id, hp, resist));			
-				console.log(this.previousUnit.prevUnitProps.name, "shot", name, id);
-				this.reduceAction(2,"previous");
+				this.props.dispatch(boltEnemy(this.previousEnemy.prevEnemyProps.id, this.previousEnemy.prevEnemyProps.totalHP, this.previousEnemy.prevEnemyProps.ranged, this.previousEnemy.prevEnemyProps.no, this.previousEnemy.prevEnemyProps.magic, id, hp, resist));			
+				// console.log(this.previousUnit.prevUnitProps.name, "shot", name, id);
+				this.props.displayEnemy(this.previousEnemy.prevEnemyProps.name + " shot " + name);
+				this.reduceAction(2,"previous","enemy");
 			}
 		}
 	}
@@ -656,7 +699,8 @@ export default class Arena extends React.Component{
 				console.log("Attacker Id:", this.selectedArenaUnit.selectUnitProps.id, "number", this.selectedArenaUnit.selectUnitProps.no, "melee", this.selectedArenaUnit.selectUnitProps.melee, "defense", this.selectedArenaUnit.selectUnitProps.defense);
 				console.log(unit.id, unit.totalHP, unit.defense, unit.melee, unit.no);
 				this.props.dispatch(attackEnemy(this.selectedArenaUnit.selectUnitProps.id, this.selectedArenaUnit.selectUnitProps.totalHP, this.selectedArenaUnit.selectUnitProps.melee, this.selectedArenaUnit.selectUnitProps.no, this.selectedArenaUnit.selectUnitProps.defense, unit.id, unit.totalHP, unit.defense, unit.melee, unit.no) );
-				this.reduceAction(2,"current");
+				this.props.displayEnemy(this.selectedArenaUnit.selectUnitProps.name + " attacked " + unit.name);
+				this.reduceAction(2,"current","enemy");
 			}
 		}
 	}
@@ -863,9 +907,9 @@ export default class Arena extends React.Component{
 	}
 
 	componentDidMount() {
-		console.log(this.props.playerTeam);
-		// axios.post("/enemies/" + this.props.playerTeam).then(function(response) {
-		axios.get("/enemies").then(function(response) {
+		axios.post("/enemies/" + this.props.playerTeam).then(function(response) {
+		// This version gets a random team
+		// axios.get("/enemies").then(function(response) {
 			var teamlength = response.data.enemyteam.length;
 			var movesArray = [];
 			for (let i=0; i<teamlength; i++) {
@@ -878,8 +922,9 @@ export default class Arena extends React.Component{
 			});
 			this.props.enemySide(response.data.team);
 		}.bind(this) );
-		// axios.post("/team/" + this.props.playerTeam).then(function(response) {
-		axios.get("/allies").then(function(response) {
+		axios.post("/team/" + this.props.playerTeam).then(function(response) {
+		// This version gets a random team
+		// axios.get("/allies").then(function(response) {
 			var teamlength = response.data.enemyteam.length;
 			var movesArray = [];
 			for (let i=0; i<teamlength; i++) {
@@ -950,9 +995,6 @@ export default class Arena extends React.Component{
 		}
 		//console.log(this.targetSquares);
 		if (this.reset.speed) {
-			console.log("Reset speed");
-			console.log(this.reset.initEnemyMoves);
-			console.log(this.reset.initAllyMoves);
 			this.setState({
 				enemyMoves: this.reset.initEnemyMoves,
 				allyMoves: this.reset.initAllyMoves,
@@ -1026,7 +1068,7 @@ export default class Arena extends React.Component{
 			this.reset.speed = true;
 		}
 
-		console.log(newProps);
+		// console.log(newProps);
 		//console.log(this.previousUnit);
 
 	}
@@ -1060,14 +1102,15 @@ export default class Arena extends React.Component{
 
 		//Selected unit props
 		var selectUnit = this.selectedArenaUnit.selectUnit;
-		var propsUnitId = this.selectedArenaUnit.selectedUnitId;
+		var propsAllyId = this.selectedArenaUnit.selectedUnitId;
 		var unitIsSelected = this.state.unitIsSelected;
 		var movesLeft = this.selectedArenaUnit.selectUnitProps.speed;
 		var waitClicked = this.state.waitClicked;
 		var cursorEnemy = this.state.cursorEnemy;
 		var cursorSword = this.state.cursorSword;
 		var cursorAlly = this.state.cursorAlly;
-		var getUnit = this.getUnit;
+		var getAllyUnit = this.getAllyUnit;
+		var getEnemyUnit = this.getEnemyUnit;
 
 		//Selected unit coordinates
 		var selectedUnitX;
@@ -1081,7 +1124,7 @@ export default class Arena extends React.Component{
 		}
 
 		//The previous unit props
-		var prevId = this.props.prevId;
+		var prevAllyId = this.props.prevAllyId;
 		var prevHp = this.props.prevHp;
 		var ammo = this.props.ammo;
 		var magic = this.props.magic;
@@ -1115,7 +1158,7 @@ export default class Arena extends React.Component{
 
 		//Properties for enemy team's calculations
 		var enemyMovesLeft = this.props.speed;
-		var currentEnemyId = this.previousUnit.prevUnitProps.id
+		var currentEnemyId = this.previousEnemy.prevEnemyProps.id
 		var sortEnemyUnits = this.sortEnemyUnits;
 		var attackAlly = this.attackAlly;
 		var shootAlly = this.shootAlly;
@@ -1203,7 +1246,7 @@ export default class Arena extends React.Component{
 				style: {margin: "auto"},
 				damageSpell: damageSpell,
 				cursorEnemy: cursorEnemy,
-				getUnit: getUnit,
+				getEnemyUnit: getEnemyUnit,
 				unitIsSelected: unitIsSelected,
 				resetSelection: resetSelection,
 				unitHP: totalHP,
@@ -1253,7 +1296,7 @@ export default class Arena extends React.Component{
 
 			unit.ally = true;
 
-			if (unit.id === prevId) {
+			if (unit.id === prevAllyId) {
 				unit.affected = true;
 				unit.totalHP = prevHp;
 				unit.ammo = ammo;
@@ -1298,7 +1341,7 @@ export default class Arena extends React.Component{
 				responsive : "img-responsive",
 				style : {margin:"auto"},
 				tahui : tahui,
-				getUnit : getUnit,
+				getAllyUnit : getAllyUnit,
 				previousCoords : previousCoords,
 				updateCoords : updateCoords,
 				unitIsSelected : unitIsSelected,
@@ -1316,7 +1359,7 @@ export default class Arena extends React.Component{
 				//It might not be necessary to pass selectUnit to Ally props
 				//Could remove
 				selectUnit : selectUnit,
-				propsUnitId : propsUnitId
+				propsAllyId : propsAllyId
 			};
 
 			/*
@@ -1336,7 +1379,7 @@ export default class Arena extends React.Component{
 
 				console.log("1: This is from the default position");
 				console.log("unit.id ",unit.id);
-				console.log("propsUnitId ", propsUnitId);
+				console.log("propsAllyId ", propsAllyId);
 				console.log("prevUnit ", prevUnit);
 				//console.log("newUnit ",newUnit);
 				console.log(previousUnitXY[0],previousUnitXY[1]);
@@ -1354,7 +1397,7 @@ export default class Arena extends React.Component{
 
 				console.log("2: Unit visible even if not yet moved");
 				console.log("unit.id ",unit.id);
-				console.log("propsUnitId ", propsUnitId);
+				console.log("propsAllyId ", propsAllyId);
 				console.log("prevUnit ", prevUnit);
 				//console.log("newUnit ",newUnit);
 				console.log(previousUnitXY[0],previousUnitXY[1]);
@@ -1373,7 +1416,7 @@ export default class Arena extends React.Component{
 
 				console.log("3: Unit moved and kept in current position");
 				console.log("unit.id ",unit.id);
-				console.log("propsUnitId ", propsUnitId);
+				console.log("propsAllyId ", propsAllyId);
 				console.log("prevUnit ", prevUnit);
 				//console.log("newUnit ",newUnit);
 				console.log(previousUnitXY[0],previousUnitXY[1]);
@@ -1386,10 +1429,10 @@ export default class Arena extends React.Component{
 
 			// removed conditions && unit.id === currentUnitId && prevUnit !== currentUnitId
 			//newPosX and newPosY aren't getting called because they are undefined outside the conditional
-			else if (x === newPosX && y === newPosY && unit.id === propsUnitId && prevUnit !== propsUnitId) {
+			else if (x === newPosX && y === newPosY && unit.id === propsAllyId && prevUnit !== propsAllyId) {
 				console.log("4: Prevent unit from replacing another");
 				console.log("unit.id ",unit.id);
-				console.log("propsUnitId ", propsUnitId);
+				console.log("propsAllyId ", propsAllyId);
 				console.log("prevUnit ", prevUnit);
 				// console.log("newUnit ",newUnit);
 				console.log(previousUnitXY[0],previousUnitXY[1]);
@@ -1464,14 +1507,15 @@ export default class Arena extends React.Component{
 		// console.log(this.selectedArenaUnit);
 		// console.log(this.props);
 		// console.log(this.state);
-		// console.log(this.state.selectedUnitId);
+		console.log(this.state.selectedUnitId);
 		// console.log(this.props.unitIsAffected);
+		// console.log(this.state.unitIsAffected);
 		// console.log(this.allyCalculations.rankAllyHp);
 		// console.log(this.state.playerTurn);
 		// console.log(this.enemyTeamUnits.projectileUnits);
 		// console.log(this.enemyTeamUnits.meleeUnits);
 		// console.log(this.allyCalculations.allyTargetId);
-		console.log(this.reset.initAllyMoves);
+		// console.log(this.reset.initAllyMoves);
 		// console.log(this.reset.initEnemyMoves);
 
 		var squares = [];

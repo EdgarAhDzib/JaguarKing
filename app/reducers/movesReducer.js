@@ -1,5 +1,5 @@
 export default function reducer(state={
-		prevId: "",
+		prevAllyId: "",
 		unitId: "",
 		prevHp: 0,
 		totalHP: 0,
@@ -90,13 +90,13 @@ export default function reducer(state={
 			//Attack moves
 			case 'shootEnemy' :
 			//Include action.ranged and action.num from prevUnit to factor the strength and number of attackers
-				return {...state, prevId: action.prevId, prevHp: action.prevHp, unitId: action.targetId, ammo: action.ammo - 1, totalHP: action.hitpoints - attackDamage, unitIsAffected: true}
+				return {...state, prevAllyId: action.prevAllyId, prevHp: action.prevHp, unitId: action.targetId, ammo: action.ammo - 1, totalHP: action.hitpoints - attackDamage, unitIsAffected: true}
 				break;
 			case 'boltEnemy' :
-				return {...state, prevId: action.prevId, prevHp: action.prevHp, unitId: action.targetId, magic: action.magic - 1, totalHP: action.hitpoints - boltDamage, unitIsAffected: true}
+				return {...state, prevAllyId: action.prevAllyId, prevHp: action.prevHp, unitId: action.targetId, magic: action.magic - 1, totalHP: action.hitpoints - boltDamage, unitIsAffected: true}
 				break;
 			case 'attackEnemy' :
-				return {...state, prevId: action.prevId, prevHp: action.prevHp - counterDamage, unitId: action.targetId, totalHP: action.hitpoints - fullAttack, unitIsAffected: true}
+				return {...state, prevAllyId: action.prevAllyId, prevHp: action.prevHp - counterDamage, unitId: action.targetId, totalHP: action.hitpoints - fullAttack, unitIsAffected: true}
 				break;
 			// case 'previousCoords':
 			// 	return {...state, prevXY: action.payload}
